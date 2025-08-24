@@ -2,7 +2,8 @@ import otpService from "../services/otp-service.js"
 import hashService from "../services/hash-service.js"
 import userService from "../services/user-service.js"
 import tokenService from "../services/token-service.js"
-
+import { cookieOptions } from "../constants/config.js"
+import UserDto from "../dtos/user-dto.js"
 class AuthController{
 
         async sendOtp(req,res){
@@ -21,13 +22,14 @@ class AuthController{
 
                 // send otp
                 try {
-                        await otpService.sendBySms(phone,otp)
+                        // await otpService.sendBySms(phone,otp)
 
                         res.status(200).json({
                                 success:true,
                                 message:'OTP sent successfully',
                                 phone,
-                                hash:`${hash}.${expires}`
+                                hash:`${hash}.${expires}`,
+                                otp
                         })
                 } catch (error) {
                         console.log('Error in sending OTP',error);
@@ -83,19 +85,16 @@ class AuthController{
                 res.cookie(
                         'refreshToken',
                         refreshToken,
-                        {
-                                httpOnly:true,
-                                maxAge:7*24*60*60*1000
-                        }
+                       cookieOptions
                 )
+                const userDto = new UserDto(user)
 
                 res.json({
                         success:true,
                         message:'OTP verified successfully',
-                        user,
+                        user:userDto,
                         accessToken
                 })
-
 
         }
 }
