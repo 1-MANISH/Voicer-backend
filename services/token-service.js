@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { RefreshTokens } from '../models/refresh-model.js'
 
 class TokenService{
 
@@ -11,7 +12,7 @@ class TokenService{
                 let accessToken = jwt.sign(
                         payload,
                         this.accessTokenSecret,
-                        {expiresIn:'15m'}
+                        {expiresIn:'60m'}
                 )
                 let refreshToken = jwt.sign(
                         payload,
@@ -19,6 +20,27 @@ class TokenService{
                         {expiresIn:'7d'}
                 )
                 return {accessToken,refreshToken}
+        }
+
+        async storeRefreshToken(token,userId){
+               try {
+                        await RefreshTokens.create({
+                                token,
+                                userId
+                        })
+               } catch (error) {
+                        console.log(error)
+
+               }
+        }
+
+        async validateAccessToken(token){
+                try {
+                        return  jwt.verify(token,this.accessTokenSecret)
+                } catch (error) {
+                        // console.log(error)
+                        return null
+                }
         }
 }
 

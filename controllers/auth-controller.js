@@ -87,16 +87,26 @@ class AuthController{
                         refreshToken,
                        cookieOptions
                 )
+
+                 res.cookie(
+                        'accessToken',
+                        accessToken,
+                       cookieOptions
+                )
+
+                await tokenService.storeRefreshToken(refreshToken,user._id)
+
                 const userDto = new UserDto(user)
 
                 res.json({
                         success:true,
                         message:'OTP verified successfully',
                         user:userDto,
-                        accessToken
+                        auth:true
                 })
 
         }
+
 }
 
 
