@@ -12,7 +12,7 @@ class TokenService{
                 let accessToken = jwt.sign(
                         payload,
                         this.accessTokenSecret,
-                        {expiresIn:'60m'}
+                        {expiresIn:'1d'}
                 )
                 let refreshToken = jwt.sign(
                         payload,
@@ -38,8 +38,38 @@ class TokenService{
                 try {
                         return  jwt.verify(token,this.accessTokenSecret)
                 } catch (error) {
-                        // console.log(error)
                         return null
+                }
+        }
+        async validateRefreshToken(token){
+                try {
+                        return  jwt.verify(token,this.refreshTokenSecret)
+                } catch (error) {
+                        return null
+                }
+        }
+
+        async findRefreshToken(userId,token){
+               try {
+                       return await RefreshTokens.findOne({userId,token})
+               } catch (error) {
+                       return null
+               }
+        }
+
+        async updateRefreshToken(token,userId){
+               try {
+                        await RefreshTokens.updateOne({userId},{token})
+               } catch (error) {
+                        console.log(error)
+               }
+        }
+
+        async removeRefreshToken(userId,token){
+                try {
+                        await RefreshTokens.deleteOne({userId,token})
+                } catch (error) {
+                        console.log(error)
                 }
         }
 }

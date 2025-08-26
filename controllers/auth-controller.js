@@ -107,6 +107,104 @@ class AuthController{
 
         }
 
+        async refresh(req,res){
+
+                // get refresh token
+                const {refreshToken:refreshTokenFromCookie} = req.cookies
+
+                if(!refreshTokenFromCookie){
+                        return res.status(401).json({message:'Unauthorized ,  No refresh token in cookies',success:false})
+                }
+
+                // check token is valid or not
+                let userData
+                try {
+                        userData = await tokenService.validateRefreshToken(refreshTokenFromCookie)
+                } catch (error) {
+                        return res.status(401).json({message:'Unauthorized , Invalid refresh token',success:false})
+                }
+
+                // refresh token is in db or not
+                try {
+                        const token = tokenService.findRefreshToken(userData._id,refreshTokenFromCookie)
+                        if(!token){
+                                return res.status(500).json({message:'Unauthorized , Token not found ',success:false})
+                        }
+                } catch (error) {
+                        return res.status(401).json({message:'Unauthorized , Invalid refresh token ',success:false})
+                }
+
+                // check if valid user
+                let user
+                try {
+                        user = await userService.findUser({_id:userData._id})
+                        if(!user){
+                                return res.status(500).json({message:'Unauthorized , User not found ',success:false})
+                        }
+                } catch (error) {
+                        return res.status(401).json({message:'Unauthorized , User not found',success:false})
+                }
+
+                // generate new access token and refresh token
+                let {accessToken,refreshToken} =tokenService.generateTokens(
+                        {
+                                _id:user._id,
+                                activated:user.activated
+                        }
+                )
+
+                // update refresh token in db
+                try {
+                        await tokenService.updateRefreshToken(refreshToken,user._id)
+                } catch (error) {
+                        return res.status(500).json({message:'DB error',success:false})
+                }
+                // put into cookies
+                res.cookie(
+                        'refreshToken',
+                        refreshToken,
+                       cookieOptions
+                )
+
+                 res.cookie(
+                        'accessToken',
+                        accessToken,
+                       cookieOptions
+                )
+                const userDto = new UserDto(user)
+                // response
+                res.json({
+                        success:true,
+                        message:'Token refreshed successfully',
+                        user:userDto,
+                        auth:true
+                })
+        }
+
+        async logout(req,res){
+
+                const {refreshToken} = req.cookies
+
+                // delete refresh token from db
+               try {
+                         await tokenService.removeRefreshToken(req.user._id,refreshToken)
+               } catch (error) {
+                        return res.status(500).json({message:'DB error',success:false})
+               }
+
+                // delete cookies
+                res.clearCookie('refreshToken')
+                res.clearCookie('accessToken')
+
+                res.json({
+                        success:true,
+                        message:'Logout successfully',
+                        auth:false,
+                        user:null
+                })
+
+        }
+
 }
 
 

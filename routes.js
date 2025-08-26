@@ -6,11 +6,17 @@ import { authMiddleware } from "./middlewares/auth-middleware.js"
 const router = express.Router()
 
 
+router.get('/api/v1/refresh',authController.refresh)
+
 router.post('/api/v1/send-otp',authController.sendOtp)
 
 router.post('/api/v1/verify-otp',authController.verifyOtp)
 
+
+
 // those who authenticated
+router.post('/api/v1/user-logout',authMiddleware,authController.logout)
+
 router.post('/api/v1/activate-user',authMiddleware,activateController.activateUser)
 
 export default router
