@@ -172,6 +172,7 @@ class AuthController{
                        cookieOptions
                 )
                 const userDto = new UserDto(user)
+
                 // response
                 res.json({
                         success:true,

@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { type } from "os"
+
 
 const userSchema = new mongoose.Schema({
         name:{
@@ -9,12 +9,13 @@ const userSchema = new mongoose.Schema({
         avatar:{
                 url:{
                         type:String,
-                        required:false
+                        required:false,
                 },
                 publicId:{
                         type:String,
                         required:false
-                }
+                },
+                
         },
         phone:{
                 type:String,
@@ -26,7 +27,18 @@ const userSchema = new mongoose.Schema({
                 default:false
         }
 },{
-        timestamps:true
+        timestamps:true,
+        toJSON:{
+                virtuals:true,
+                transform(doc,ret){
+                        if(ret.avatar && ret.avatar.url){
+                                ret.avatar = ret.avatar.url
+                        }else{
+                                ret.avatar = null
+                        }
+                        return ret
+                }
+        }
 })
 
 
