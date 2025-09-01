@@ -4,9 +4,24 @@ import { connectDB } from './database.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { v2 as cloudinary } from 'cloudinary';
+import {createServer} from 'http'
+import { Server  } from 'socket.io'
+import { ACTIONS } from './socket/actions.js'
 
 const app = express()
 const PORT = process.env.PORT || 5500
+const server = createServer(app) // http server
+const io = new Server(server,{
+        cors: {
+                origin: process.env.FRONTEND_URL,
+                credentials: true,
+                methods: ["GET","POST","PUT","DELETE"]
+        }
+})
+
+const socketUserMapping = {
+
+}
 
 //config dotenv
 dotenv.config({path:"./.env"})
@@ -38,7 +53,34 @@ app.get('/', (req, res) => {
     res.send('Server is running')
 })
 
+// socket logics
 
-app.listen(PORT , () => {
+io.on('connection', (socket) => {
+        console.log('new connection !!',socket.id)
+
+        socket.on(ACTIONS.JOIN,({roomId,user})=>{
+                socketUserMapping[socket.id] = user
+
+                // new Map
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+
+                clients.forEach(clientId=>{
+                        // event emit
+                        //p2p connection
+                        io.to(clientId).emit(ACTIONS.ADD_PEER,{
+
+                        })
+                })
+
+                socket.emit(ACTIONS.ADD_PEER,{})
+
+                socket.join(roomId)
+
+                
+        })
+})
+
+
+server.listen(PORT , () => {
         console.log(`Server is running on port ${process.env.PORT || 5000} 🤔`)
 })
