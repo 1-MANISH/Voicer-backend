@@ -113,12 +113,12 @@ io.on('connection', (socket) => {
                         clients.forEach(clientId=>{
                                 io.to(clientId).emit(ACTIONS.REMOVE_PEER,{
                                         peerId:socket.id,
-                                        userId:socketUserMapping[socket.id]._id
+                                        userId:socketUserMapping[socket.id]?._id
                                 })
 
                                 socket.emit(ACTIONS.REMOVE_PEER,{
                                         peerId:clientId,
-                                        userId:socketUserMapping[clientId]._id
+                                        userId:socketUserMapping[clientId]?._id
                                 })
                         })
 
@@ -129,6 +129,9 @@ io.on('connection', (socket) => {
         }
 
         socket.on(ACTIONS.LEAVE,leaveRoom)
+
+        // disconnect
+        socket.on('disconnecting',leaveRoom)
 
 })
 
