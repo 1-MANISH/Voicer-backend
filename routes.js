@@ -25,4 +25,6 @@ router.post('/api/v1/rooms/create',authMiddleware,roomsController.createRoom)
 
 router.get('/api/v1/rooms/all',authMiddleware,roomsController.index)
 
+router.get('/api/v1/room/:roomId',authMiddleware,roomsController.show)
+
 export default router
