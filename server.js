@@ -101,6 +101,30 @@ io.on('connection', (socket) => {
                 })
         })
 
+        // mute handle
+        socket.on(ACTIONS.MUTE,({userId,roomId})=>{
+
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+
+                clients.forEach(clientId=>{
+                        io.to(clientId).emit(ACTIONS.MUTE,{
+                                peerId:socket.id,
+                                userId
+                        })
+                })
+        })
+        // unmute handle
+        socket.on(ACTIONS.UNMUTE,({userId,roomId})=>{
+                 const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+
+                clients.forEach(clientId=>{
+                        io.to(clientId).emit(ACTIONS.UNMUTE,{
+                                peerId:socket.id,
+                                userId
+                        })
+                })
+        })
+
         // handle remove peer
         // handle leave the room
 
