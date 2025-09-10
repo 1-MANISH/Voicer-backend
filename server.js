@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
                                 user
                         })
 
-                         socket.emit(ACTIONS.ADD_PEER,{
+                        socket.emit(ACTIONS.ADD_PEER,{
                                 peerId:clientId,
                                 createOffer:true,
                                 user:socketUserMapping[clientId]
@@ -125,6 +125,20 @@ io.on('connection', (socket) => {
                 })
         })
 
+         socket.on(ACTIONS.MUTE_INFO, ({ userId, roomId, isMute }) => {
+
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+                clients.forEach((clientId) => {
+                        if (clientId !== socket.id) {
+                                console.log('mute info')
+                                io.to(clientId).emit(ACTIONS.MUTE_INFO, {
+                                        userId,
+                                        isMute,
+                                })
+                }
+                })
+        })
+
         // handle remove peer
         // handle leave the room
 
@@ -140,10 +154,10 @@ io.on('connection', (socket) => {
                                         userId:socketUserMapping[socket.id]?._id
                                 })
 
-                                socket.emit(ACTIONS.REMOVE_PEER,{
-                                        peerId:clientId,
-                                        userId:socketUserMapping[clientId]?._id
-                                })
+                                // socket.emit(ACTIONS.REMOVE_PEER,{
+                                //         peerId:clientId,
+                                //         userId:socketUserMapping[clientId]?._id
+                                // })
                         })
 
                         socket.leave(roomId)

@@ -23,7 +23,7 @@ class AuthController{
                 // send otp
                 try {
                         // await otpService.sendBySms(phone,otp)
-
+                        console.log(otp)
                         res.status(200).json({
                                 success:true,
                                 message:'OTP sent successfully',
