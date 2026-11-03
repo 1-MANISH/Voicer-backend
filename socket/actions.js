@@ -9,6 +9,9 @@ export const ACTIONS = {
         REMOVE_PEER:'remove-peer',
         MUTE:'mute',
         UNMUTE:"unmute",
-        MUTE_INFO:"mute-info"
-
+        MUTE_INFO:"mute-info",
+        RAISE_HAND:"raise-hand",
+        LOWER_HAND:"lower-hand",
+        GRANT_SPEAK_PERMISSION:"grant-speak-permission",
+        REVOKE_SPEAK_PERMISSION:"revoke-speak-permission"
 }

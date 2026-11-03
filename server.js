@@ -7,6 +7,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import {createServer} from 'http'
 import { Server  } from 'socket.io'
 import { ACTIONS } from './socket/actions.js'
+import { Room } from './models/room-model.js'
 
 const app = express()
 const PORT = process.env.PORT || 5500
@@ -136,6 +137,67 @@ io.on('connection', (socket) => {
                                         isMute,
                                 })
                 }
+                })
+        })
+
+        // hand raise and permission handlers
+        socket.on(ACTIONS.RAISE_HAND, ({ userId, roomId }) => {
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+                clients.forEach(clientId => {
+                        io.to(clientId).emit(ACTIONS.RAISE_HAND, {
+                                userId,
+                                roomId,
+                                isRaised: true
+                        })
+                })
+        })
+
+        socket.on(ACTIONS.LOWER_HAND, ({ userId, roomId }) => {
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+                clients.forEach(clientId => {
+                        io.to(clientId).emit(ACTIONS.LOWER_HAND, {
+                                userId,
+                                roomId,
+                                isRaised: false
+                        })
+                })
+        })
+
+        socket.on(ACTIONS.GRANT_SPEAK_PERMISSION, async ({ userId, roomId }) => {
+                try {
+                        if (roomId && userId) {
+                                await Room.findByIdAndUpdate(roomId, { $addToSet: { speakers: userId } })
+                        }
+                } catch (e) {
+                        console.error('Error adding speaker:', e)
+                }
+
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+                clients.forEach(clientId => {
+                        io.to(clientId).emit(ACTIONS.GRANT_SPEAK_PERMISSION, {
+                                userId,
+                                roomId,
+                                canSpeak: true
+                        })
+                })
+        })
+
+        socket.on(ACTIONS.REVOKE_SPEAK_PERMISSION, async ({ userId, roomId }) => {
+                try {
+                        if (roomId && userId) {
+                                await Room.findByIdAndUpdate(roomId, { $pull: { speakers: userId } })
+                        }
+                } catch (e) {
+                        console.error('Error removing speaker:', e)
+                }
+
+                const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+                clients.forEach(clientId => {
+                        io.to(clientId).emit(ACTIONS.REVOKE_SPEAK_PERMISSION, {
+                                userId,
+                                roomId,
+                                canSpeak: false
+                        })
                 })
         })
 

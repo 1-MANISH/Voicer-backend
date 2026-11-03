@@ -5,6 +5,8 @@ class RoomDto{
       roomType
       ownerId
       speakers
+      hasPasscode
+      passcode
       createdAt
 
         constructor(room){
@@ -13,6 +15,8 @@ class RoomDto{
                 this.roomType = room.roomType
                 this.ownerId = room.ownerId
                 this.speakers = room.speakers
+                this.hasPasscode = !!room.passcode
+                this.passcode = room.passcode || null
                 this.createdAt = room.createdAt
               
         }
