@@ -3,12 +3,13 @@ import { Room } from "../models/room-model.js"
 class RoomService{
 
         async create(payload){
-                const {roomTopic,roomType,ownerId} = payload
+                const {roomTopic,roomType,ownerId,passcode} = payload
                 try {
                         return await Room.create({
                                 roomTopic,
                                 roomType,
                                 ownerId,
+                                passcode: passcode || null,
                                 speakers:[
                                         ownerId
                                 ]
@@ -21,9 +22,11 @@ class RoomService{
 
         async getAllRooms(roomTypes){
                 try {
-                        return await Room.find({roomType:{$in:roomTypes}})
+                        const filter = roomTypes && roomTypes.length > 0 ? {roomType:{$in:roomTypes}} : {}
+                        return await Room.find(filter)
                                                         .populate('ownerId')
                                                         .populate('speakers')
+                                                        .sort({ createdAt: -1 })
                                                         .exec()
                 } catch (error) {
                         return error

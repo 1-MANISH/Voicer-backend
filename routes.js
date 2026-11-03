@@ -1,7 +1,8 @@
 import express from "express"
-import  authController from './controllers/auth-controller.js'
+import authController from './controllers/auth-controller.js'
 import activateController from "./controllers/activate-controller.js"
 import roomsController from "./controllers/rooms-controller.js"
+import userController from "./controllers/user-controller.js"
 import { authMiddleware } from "./middlewares/auth-middleware.js"
 
 const router = express.Router()
@@ -20,11 +21,17 @@ router.post('/api/v1/user-logout',authMiddleware,authController.logout)
 
 router.post('/api/v1/activate-user',authMiddleware,activateController.activateUser)
 
+// user profile
+router.get('/api/v1/user/profile',authMiddleware,userController.getProfile)
+router.put('/api/v1/user/profile',authMiddleware,userController.updateProfile)
+
 // rooms
 router.post('/api/v1/rooms/create',authMiddleware,roomsController.createRoom)
 
 router.get('/api/v1/rooms/all',authMiddleware,roomsController.index)
 
 router.get('/api/v1/room/:roomId',authMiddleware,roomsController.show)
+
+router.post('/api/v1/room/:roomId/verify-passcode',authMiddleware,roomsController.verifyPasscode)
 
 export default router

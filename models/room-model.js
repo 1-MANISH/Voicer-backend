@@ -18,7 +18,11 @@ const roomSchema = new mongoose.Schema({
         speakers:[{
                 type:mongoose.Schema.Types.ObjectId,
                 ref:"User"
-        }]
+        }],
+        passcode:{
+                type:String,
+                required:false
+        }
 },{
         timestamps:true
 })

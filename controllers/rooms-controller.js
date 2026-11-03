@@ -6,7 +6,7 @@ class RoomsController{
 
         async createRoom(req,res){
 
-                const {roomTopic,roomType} = req.body
+                const {roomTopic,roomType,passcode} = req.body
 
                 if(!roomTopic || !roomType){
                         return res.status(400).json({
@@ -15,13 +15,20 @@ class RoomsController{
                         })
                 }
 
+                // If closed room and no passcode provided, generate a 4-digit code
+                let roomPasscode = passcode
+                if(roomType === 'closed' && !roomPasscode){
+                        roomPasscode = Math.floor(1000 + Math.random() * 9000).toString()
+                }
+
                 // create room
                 let room
                 try {
                         room  = await roomService.create({
                                 roomTopic,
                                 roomType,
-                                ownerId:req.user._id
+                                ownerId:req.user._id,
+                                passcode: roomPasscode
                         })
                         if(!room){
                                 return res.status(500).json({
@@ -50,8 +57,21 @@ class RoomsController{
         async index(req,res){
 
                 try {
-                        const rooms = await roomService.getAllRooms(['open'])
-                        const allRooms = rooms.map(room => new RoomDto(room))
+                        const { type } = req.query
+                        const typesToFetch = type ? [type] : ['open', 'social', 'closed']
+                        const rooms = await roomService.getAllRooms(typesToFetch)
+                        const allRooms = rooms.map(room => {
+                                const dto = new RoomDto(room)
+                                // Only owner gets the actual passcode
+                                const isOwner = room.ownerId && (
+                                        (room.ownerId._id && room.ownerId._id.toString() === req.user._id.toString()) ||
+                                        room.ownerId.toString() === req.user._id.toString()
+                                )
+                                if (!isOwner) {
+                                        dto.passcode = null
+                                }
+                                return dto
+                        })
                         res.status(200).json({
                                 success:true,
                                 message:'Rooms fetched successfully',
@@ -88,12 +108,76 @@ class RoomsController{
                         })
                 }
 
+                if(!room){
+                        return res.status(404).json({
+                                success:false,
+                                message:'Room not found'
+                        })
+                }
+
+                const roomDto = new RoomDto(room)
+                // Only owner gets the passcode
+                const isOwner = room.ownerId && (
+                        (room.ownerId._id && room.ownerId._id.toString() === req.user._id.toString()) ||
+                        room.ownerId.toString() === req.user._id.toString()
+                )
+                if (!isOwner) {
+                        roomDto.passcode = null
+                }
+
                 return res.status(200).json({
                         success:true,
                         message:'Room fetched successfully',
-                        room:new RoomDto(room)
+                        room:roomDto
                 })
 
+        }
+
+        async verifyPasscode(req,res){
+                const {roomId} = req.params
+                const {passcode} = req.body
+
+                if(!roomId){
+                        return res.status(400).json({
+                                success:false,
+                                message:'Room id is required'
+                        })
+                }
+
+                try {
+                        const room = await roomService.getRoom(roomId)
+                        if(!room){
+                                return res.status(404).json({
+                                        success:false,
+                                        message:'Room not found'
+                                })
+                        }
+
+                        if(room.roomType !== 'closed'){
+                                return res.status(200).json({
+                                        success:true,
+                                        message:'Room is not closed'
+                                })
+                        }
+
+                        if(room.passcode && String(room.passcode).trim() !== String(passcode || '').trim()){
+                                return res.status(400).json({
+                                        success:false,
+                                        message:'Invalid passcode for this room'
+                                })
+                        }
+
+                        return res.status(200).json({
+                                success:true,
+                                message:'Passcode verified'
+                        })
+                } catch (error) {
+                        return res.status(500).json({
+                                success:false,
+                                message:'Failed to verify passcode',
+                                error
+                        })
+                }
         }
 }
 
